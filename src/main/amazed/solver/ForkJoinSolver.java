@@ -67,6 +67,13 @@ public class ForkJoinSolver
         return parallelDepthFirstSearch();
     }
 
+
+    /**
+     * TODO!: Provide an implementation of parallel depth-first search using fork/join parallelism.
+     * You only need to implement method parallelDepthFirstSearch() in class ForkJoinSolver.
+     * You are allowed to use auxiliary (private) methods and attributes, but you should not modify other parts of the given implementation.
+     * @return
+     */
     private List<Integer> parallelDepthFirstSearch()
     {
         return null;
