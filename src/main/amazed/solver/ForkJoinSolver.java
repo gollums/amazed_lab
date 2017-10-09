@@ -19,9 +19,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
  */
 
 
-public class ForkJoinSolver
-    extends SequentialSolver
-{
+public class ForkJoinSolver extends SequentialSolver{
     /**
      * Creates a solver that searches in <code>maze</code> from the
      * start node to a goal.
@@ -74,8 +72,49 @@ public class ForkJoinSolver
      * You are allowed to use auxiliary (private) methods and attributes, but you should not modify other parts of the given implementation.
      * @return
      */
-    private List<Integer> parallelDepthFirstSearch()
-    {
+    private List<Integer> parallelDepthFirstSearch(){
+
+
+/*
+
+        SequentialSolver solution
+
+        // one player active on the maze at start
+        int player = maze.newPlayer(start);
+        // start with start node
+        frontier.push(start);
+        // as long as not all nodes have been processed
+        while (!frontier.empty()) {
+            // get the new node to process
+            int current = frontier.pop();
+            // if current node has a goal
+            if (maze.hasGoal(current)) {
+                // move player to goal
+                maze.move(player, current);
+                // search finished: reconstruct and return path
+                return pathFromTo(start, current);
+            }
+            // if current node has not been visited yet
+            if (!visited.contains(current)) {
+                // move player to current node
+                maze.move(player, current);
+                // mark node as visited
+                visited.add(current);
+                // for every node nb adjacent to current
+                for (int nb: maze.neighbors(current)) {
+                    // add nb to the nodes to be processed
+                    frontier.push(nb);
+                    // if nb has not been already visited,
+                    // nb can be reached from current (i.e., current is nb's predecessor)
+                    if (!visited.contains(nb))
+                        predecessor.put(nb, current);
+                }
+            }
+        }
+        // all nodes explored, no goal found
+        return null;
+
+*/
         return null;
     }
 }
