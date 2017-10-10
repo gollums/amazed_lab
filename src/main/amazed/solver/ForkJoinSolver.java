@@ -2,12 +2,9 @@ package amazed.solver;
 
 import amazed.maze.Maze;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ExecutionException;
 
 /**
  * <code>ForkJoinSolver</code> implements a solver for
@@ -20,6 +17,10 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 
 public class ForkJoinSolver extends SequentialSolver{
+
+    private Map<Integer, ForkJoinSolver> players;
+    private static Set<Integer> visited = new ConcurrentSkipListSet<>();
+
     /**
      * Creates a solver that searches in <code>maze</code> from the
      * start node to a goal.
@@ -46,6 +47,24 @@ public class ForkJoinSolver extends SequentialSolver{
     {
         this(maze);
         this.forkAfter = forkAfter;
+        this.players = new HashMap<>();
+    }
+
+    /**
+     * Creates a solver that searches in <code>maze</code> from the
+     * start node to a goal, forking after a given number of visited
+     * nodes.
+     *  @param maze        the maze to be searched
+     * @param forkAfter   the number of steps (visited nodes) after
+     *                    which a parallel task is forked; if
+     *                    <code>forkAfter &lt;= 0</code> the solver never
+     */
+    //TODO change javadoc
+    public ForkJoinSolver(Maze maze, int forkAfter, int start)
+    {
+        this(maze, forkAfter);
+        this.start = start;
+
     }
 
     /**
@@ -75,6 +94,7 @@ public class ForkJoinSolver extends SequentialSolver{
     private List<Integer> parallelDepthFirstSearch(){
 
         int player = maze.newPlayer(start);
+        int counter = 0;
 
         frontier.push(start);
 
@@ -88,19 +108,42 @@ public class ForkJoinSolver extends SequentialSolver{
             }
 
             if (!visited.contains(current)){
+
                 maze.move(player,current);
                 visited.add(current);
-                for(int nb:maze.neighbors(current)){
-                    frontier.push(nb);
-                    if(!visited.contains(nb)){
-                        predecessor.put(nb,current);
+                for(int nb: maze.neighbors(current)) {
+                    if (counter >= forkAfter - 1 && maze.neighbors(current).size() > 2) {
+                        counter = 0;
+                        if (!visited.contains(nb)) {
+                            players.put(current, (ForkJoinSolver) new ForkJoinSolver(maze, forkAfter, nb).fork());
+                        }
+                    } else {
+                        frontier.push(nb);
+                    }
+                    if (!visited.contains(nb)) {
+                        predecessor.put(nb, current);
                     }
                 }
+
+
             }
 
-
+            counter++;
         }
 
+        List<Integer> l1 = new LinkedList<>();
+        for (Map.Entry<Integer, ForkJoinSolver> p: players.entrySet()) {
+            List<Integer> l = p.getValue().join();
+            if (l != null) {
+                List<Integer> l2 = pathFromTo(start, p.getValue().start);
+                if (l2 != null) {
+                    l1.addAll(l2);
+                    l1.addAll(l);
+                }
+            }
+        }
+        if (!l1.isEmpty())
+            return l1;
 
 /*
 
