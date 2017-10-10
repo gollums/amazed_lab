@@ -17,6 +17,14 @@ SOURCE_FILES = $(MAZE_SOURCES:%=$(MAZE_SOURCEPATH)/%) \
 
 MAPS_DIR = maps
 
+SUBDIR_ROOTS := src
+DIRS := . $(shell find $(SUBDIR_ROOTS) -type d)
+GARBAGE_PATTERNS := *.class
+GARBAGE := $(foreach DIR,$(DIRS),$(addprefix $(DIR)/,$(GARBAGE_PATTERNS)))
+
+clean:
+	rm -rf $(GARBAGE)
+
 compile: $(SOURCE_FILES)
 	$(JAVAC) $^
 
