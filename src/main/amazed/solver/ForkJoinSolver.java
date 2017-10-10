@@ -74,6 +74,33 @@ public class ForkJoinSolver extends SequentialSolver{
      */
     private List<Integer> parallelDepthFirstSearch(){
 
+        int player = maze.newPlayer(start);
+
+        frontier.push(start);
+
+        while (!frontier.empty()){
+
+            int current = frontier.pop();
+
+            if (maze.hasGoal(current)){
+                maze.move(player,current);
+                return pathFromTo(start,current);
+            }
+
+            if (!visited.contains(current)){
+                maze.move(player,current);
+                visited.add(current);
+                for(int nb:maze.neighbors(current)){
+                    frontier.push(nb);
+                    if(!visited.contains(nb)){
+                        predecessor.put(nb,current);
+                    }
+                }
+            }
+
+
+        }
+
 
 /*
 
