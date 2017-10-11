@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 
 public class ForkJoinSolver extends SequentialSolver{
 
+    public boolean running = true;
     private Map<Integer, ForkJoinSolver> players;
     private static Set<Integer> visited = new ConcurrentSkipListSet<>();
 
@@ -98,8 +99,9 @@ public class ForkJoinSolver extends SequentialSolver{
 
         frontier.push(start);
 
-        while (!frontier.empty()){
+        while (!frontier.empty() && running){
 
+            System.out.println(counter);
             int current = frontier.pop();
 
             if (maze.hasGoal(current)){
@@ -134,16 +136,20 @@ public class ForkJoinSolver extends SequentialSolver{
         List<Integer> l1 = new LinkedList<>();
         for (Map.Entry<Integer, ForkJoinSolver> p: players.entrySet()) {
             List<Integer> l = p.getValue().join();
-            if (l != null) {
-                List<Integer> l2 = pathFromTo(start, p.getValue().start);
+            if (l != null && l1.isEmpty()) {
+                List<Integer> l2 = pathFromTo(start, p.getKey());
                 if (l2 != null) {
                     l1.addAll(l2);
                     l1.addAll(l);
+                    running = false;
                 }
             }
+            p.getValue().running = running;
         }
-        if (!l1.isEmpty())
-            return l1;
+        if (!l1.isEmpty() || !running) {
+            if (!l1.isEmpty())
+                return l1;
+        }
 
 /*
 
