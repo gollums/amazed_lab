@@ -1,0 +1,12 @@
+Our solution is mostly based on the parallel version of the search, with modifications to make it parallel.
+
+Our solution forks based on the 'forkAfter' value, it forks at the first intersection after the 'forkAfter' have been reached.
+When a thread it have run through all it's saved positions it will stop and wait for all of it's children.
+If a child have been successful and reached the goal it return it's path from where is started.
+The parent checks if it gets a successful path and then generates the path from it's childs starting position to it's own starting.
+If a parents all children are unsuccessful the parent return null aswell.
+When thread reaches a goal the results from the other threads from the same parent is ignored and shutdown as fast as possible.
+
+The solution shares the visited set so they don't passes the over the same position as another already have done.
+
+We think that this solution works well and we have tested it no the different maps that was provided in the lab.
