@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ForkJoinSolver extends SequentialSolver{
 
-    public AtomicBoolean running;
+    private static AtomicBoolean  running = new AtomicBoolean(true);
     private Map<Integer, ForkJoinSolver> players;
     private static Set<Integer> visited = new ConcurrentSkipListSet<>();
 
@@ -31,7 +31,7 @@ public class ForkJoinSolver extends SequentialSolver{
     public ForkJoinSolver(Maze maze)
     {
         super(maze);
-        running = new AtomicBoolean(true);
+
     }
 
     /**
@@ -61,13 +61,11 @@ public class ForkJoinSolver extends SequentialSolver{
      *                    which a parallel task is forked; if
      *                    <code>forkAfter &lt;= 0</code> the solver never
      * @param start       the position to start from
-     * @param running
      */
-    public ForkJoinSolver(Maze maze, int forkAfter, int start, AtomicBoolean running)
+    public ForkJoinSolver(Maze maze, int forkAfter, int start)
     {
         this(maze, forkAfter);
         this.start = start;
-        this.running = running;
 
     }
 
@@ -115,7 +113,7 @@ public class ForkJoinSolver extends SequentialSolver{
                     if (counter >= forkAfter - 1 && maze.neighbors(current).size() > 2) {
                         counter = 0;
                         if (!visited.contains(nb)) {
-                            players.put(current, (ForkJoinSolver) new ForkJoinSolver(maze, forkAfter, nb,running).fork());
+                            players.put(current, (ForkJoinSolver) new ForkJoinSolver(maze, forkAfter, nb).fork());
                         }
                     } else {
                         frontier.push(nb);
