@@ -4,7 +4,7 @@ import amazed.maze.Maze;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <code>ForkJoinSolver</code> implements a solver for
@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 
 public class ForkJoinSolver extends SequentialSolver{
 
-    public boolean running = true;
+    public AtomicBoolean running;
     private Map<Integer, ForkJoinSolver> players;
     private static Set<Integer> visited = new ConcurrentSkipListSet<>();
 
@@ -31,6 +31,7 @@ public class ForkJoinSolver extends SequentialSolver{
     public ForkJoinSolver(Maze maze)
     {
         super(maze);
+        running = new AtomicBoolean(true);
     }
 
     /**
@@ -60,11 +61,13 @@ public class ForkJoinSolver extends SequentialSolver{
      *                    which a parallel task is forked; if
      *                    <code>forkAfter &lt;= 0</code> the solver never
      * @param start       the position to start from
+     * @param running
      */
-    public ForkJoinSolver(Maze maze, int forkAfter, int start)
+    public ForkJoinSolver(Maze maze, int forkAfter, int start, AtomicBoolean running)
     {
         this(maze, forkAfter);
         this.start = start;
+        this.running = running;
 
     }
 
@@ -97,22 +100,22 @@ public class ForkJoinSolver extends SequentialSolver{
 
         frontier.push(start);
 
-        while (!frontier.empty() && running){
+        while (!frontier.empty() && running.get()){
             int current = frontier.pop();
 
             if (maze.hasGoal(current)){
                 maze.move(player,current);
+                running.set(false);
                 return pathFromTo(start,current);
             }
 
-            if (!visited.contains(current)){
+            if (visited.add(current)){
                 maze.move(player,current);
-                visited.add(current);
                 for(int nb: maze.neighbors(current)) {
                     if (counter >= forkAfter - 1 && maze.neighbors(current).size() > 2) {
                         counter = 0;
                         if (!visited.contains(nb)) {
-                            players.put(current, (ForkJoinSolver) new ForkJoinSolver(maze, forkAfter, nb).fork());
+                            players.put(current, (ForkJoinSolver) new ForkJoinSolver(maze, forkAfter, nb,running).fork());
                         }
                     } else {
                         frontier.push(nb);
@@ -122,7 +125,6 @@ public class ForkJoinSolver extends SequentialSolver{
                     }
                 }
 
-
             }
 
             counter++;
@@ -131,25 +133,19 @@ public class ForkJoinSolver extends SequentialSolver{
         //Collects all children results
         List<Integer> l1 = new LinkedList<>();
         for (Map.Entry<Integer, ForkJoinSolver> p: players.entrySet()) {
-            if (!running) {
-                p.getValue().running = running;
-            } else {
-                List<Integer> l = p.getValue().join();
-                if (l != null && l1.isEmpty()) {
-                    List<Integer> l2 = pathFromTo(start, p.getKey());
-                    if (l2 != null) {
-                        l1.addAll(l2);
-                        l1.addAll(l);
-                        running = false;
-                    }
+            List<Integer> l = p.getValue().join();
+            if (l != null && l1.isEmpty()) {
+                List<Integer> l2 = pathFromTo(start, p.getKey());
+                if (l2 != null) {
+                    l1.addAll(l2);
+                    l1.addAll(l);
                 }
             }
         }
 
         // return the path from this start to the childs start if a goal was found
-        if (!l1.isEmpty() || !running) {
-            if (!l1.isEmpty())
-                return l1;
+        if (!l1.isEmpty()) {
+            return l1;
         }
 
         return null;
