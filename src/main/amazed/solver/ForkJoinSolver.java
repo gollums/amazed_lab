@@ -122,9 +122,7 @@ public class ForkJoinSolver extends SequentialSolver{
                         predecessor.put(nb, current);
                     }
                 }
-
             }
-
             counter++;
         }
 
